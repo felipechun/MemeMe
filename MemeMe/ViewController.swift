@@ -28,33 +28,10 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     @IBOutlet weak var shareButton: UIButton!
     
     
-    let memeTextAttributes: [NSAttributedString.Key: Any] = [
-        NSAttributedString.Key.strokeColor: UIColor.black,
-        NSAttributedString.Key.foregroundColor: UIColor.white,
-        NSAttributedString.Key.font: UIFont(name: "HelveticaNeue-CondensedBlack", size: 40)!,
-        NSAttributedString.Key.strokeWidth: -6
-    ]
-    
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        // MARK: set delegates on top and bottom text fields
-        
-        topText.delegate = self
-        bottomText.delegate = self
-        
-        // MARK: set text attributes
-        
-        topText.defaultTextAttributes = memeTextAttributes
-        bottomText.defaultTextAttributes = memeTextAttributes
-        
-        // MARK: set initial text on top and bottom text fields
-        
-        topText.text = "TOP"
-        bottomText.text = "BOTTOM"
-        
-        topText.textAlignment = NSTextAlignment.center
-        bottomText.textAlignment = NSTextAlignment.center
+        setupTextField(textfield: topText, text: "TOP")
+        setupTextField(textfield: bottomText, text: "BOTTOM")
                 
     }
     
@@ -70,12 +47,21 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     }
     
     // MARK: Image Picker functions
+    
+    func chooseImageFromCameraOrPhoto(source: UIImagePickerController.SourceType) {
+        let pickerController = UIImagePickerController()
+        pickerController.delegate = self
+        pickerController.allowsEditing = true
+        pickerController.sourceType = source
+        present(pickerController, animated: true, completion: nil)
+    }
 
     @IBAction func pickImageFromAlbum(_ sender: Any) {
-        let imagePicker = UIImagePickerController()
-        imagePicker.delegate = self
-        imagePicker.sourceType = .photoLibrary
-        present(imagePicker, animated: true, completion: nil)
+        chooseImageFromCameraOrPhoto(source: .photoLibrary)
+    }
+    
+    @IBAction func pickImageFromCamera(_ sender: Any) {
+        chooseImageFromCameraOrPhoto(source: .camera)
     }
     
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
@@ -88,14 +74,21 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         dismiss(animated: true, completion: nil)
     }
     
-    @IBAction func pickImageFromCamera(_ sender: Any) {
-        let cameraImagePicker = UIImagePickerController()
-        cameraImagePicker.delegate = self
-        cameraImagePicker.sourceType = .camera
-        present(cameraImagePicker, animated: true, completion: nil)
-    }
-    
     // MARK: Text field functions
+    
+    func setupTextField(textfield: UITextField, text: String) {
+        textfield.defaultTextAttributes = [
+            NSAttributedString.Key.strokeColor: UIColor.black,
+            NSAttributedString.Key.foregroundColor: UIColor.white,
+            NSAttributedString.Key.font: UIFont(name: "HelveticaNeue-CondensedBlack", size: 40)!,
+            NSAttributedString.Key.strokeWidth: -6
+        ]
+        textfield.textColor = UIColor.white
+        textfield.tintColor = UIColor.white
+        textfield.textAlignment = .center
+        textfield.text = text
+        textfield.delegate = self
+    }
     
     func textFieldDidBeginEditing(_ textField: UITextField) {
         if textField.tag == 1 && self.topText.text == "TOP" {
@@ -112,7 +105,9 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     }
     
     @objc func keyboardWillShow(_ notification: Notification) {
-        view.frame.origin.y = -getKeyboardHeight(notification)
+        if self.bottomText.isEditing {
+            view.frame.origin.y = -getKeyboardHeight(notification)
+        }
     }
     
     @objc func keyboardWillHide(_ notification: Notification) {

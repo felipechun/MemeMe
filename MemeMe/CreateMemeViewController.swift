@@ -8,16 +8,14 @@
 
 import UIKit
 
-class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UITextFieldDelegate {
-    
-    struct Meme {
-        var topText: String
-        var bottomText: String
-        var originalImage: UIImage
-        var memedImage: UIImage
-    }
-    
-    var meme: Meme? = nil
+struct Meme {
+    var topText: String
+    var bottomText: String
+    var originalImage: UIImage
+    var memedImage: UIImage
+}
+
+class CreateMemeViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UITextFieldDelegate {
 
     @IBOutlet weak var imagePickerView: UIImageView!
     @IBOutlet weak var cameraButton: UIBarButtonItem!
@@ -36,6 +34,8 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     }
     
     override func viewWillAppear(_ animated: Bool) {
+        self.tabBarController?.tabBar.isHidden = true
+        self.navigationController?.setNavigationBarHidden(true, animated: animated)
         cameraButton.isEnabled = UIImagePickerController.isSourceTypeAvailable(.camera)
         shareButton.isEnabled = false
         subscribeToKeyboardNotifications()
@@ -44,6 +44,8 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         unsubscribeFromKeyboardNotifications()
+        self.tabBarController?.tabBar.isHidden = false
+        self.navigationController?.setNavigationBarHidden(false, animated: animated)
     }
     
     // MARK: Image Picker functions
@@ -152,14 +154,18 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         return memedImage
     }
     
-    func save() -> Meme {
+    func save() {
         let meme = Meme(
             topText: topText.text!,
             bottomText: bottomText.text!,
             originalImage: imagePickerView.image!,
             memedImage: generateMemedImage()
         )
-        return meme
+        
+        // MARK: adding meme to memes array in app delegate
+        let appDelegate = UIApplication.shared.delegate as! AppDelegate
+        appDelegate.memes.append(meme)
+        
     }
     
     @IBAction func share(_ sender: Any) {
@@ -176,7 +182,8 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             error: Error?
             ) in
             if completed {
-                self.meme = self.save()
+                self.save()
+                self.segueToRoot()
                 return
             }
             if let shareError = error {
@@ -193,6 +200,12 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         bottomText.text = "BOTTOM"
         imagePickerView.image = nil
         shareButton.isEnabled = false
+        segueToRoot()
+    }
+    
+    // perform segue to root
+    func segueToRoot() {
+        navigationController?.popToRootViewController(animated: true)
     }
     
 }
